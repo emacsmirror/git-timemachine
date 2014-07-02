@@ -2,7 +2,7 @@
 
 ## Usage
 
-Drop git-timemachine.el somewhere in your `load-path` and `(require 'git-timemachine)`.
+Drop git-timemachine.el somewhere in your `load-path`.
 
 Visit a git-controlled file and issue `M-x git-timemachine-mode` (or
 bind it to a keybinding of your choice).

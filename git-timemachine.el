@@ -1,12 +1,11 @@
-;;; git-timemachine.el --- Walk through git revisions of a file
-
-;;; -*- lexical-binding: t -*-
+;;; git-timemachine.el --- Walk through git revisions of a file  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 0.1
 ;; URL: https://github.com/pidu/git-timemachine
+;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: git
 
 ;; This file is not part of GNU Emacs
