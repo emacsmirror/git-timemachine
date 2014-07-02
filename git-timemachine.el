@@ -33,14 +33,21 @@
 
 ;;; Code:
 
+(defvar git-timemachine-directory nil)
+(make-variable-buffer-local 'git-timemachine-directory)
+(defvar git-timemachine-file nil)
+(make-variable-buffer-local 'git-timemachine-file)
+(defvar git-timemachine-revision nil)
+(make-variable-buffer-local 'git-timemachine-revision)
+
 (defun git-timemachine--revisions ()
  "List git revisions of current buffers file."
  (split-string
   (shell-command-to-string
    (format "cd %s && git log --pretty=format:%s %s"
-    (shell-quote-argument timemachine-git-directory)
+    (shell-quote-argument git-timemachine-directory)
     (shell-quote-argument "%h")
-    (shell-quote-argument timemachine-file)))
+    (shell-quote-argument git-timemachine-file)))
   nil t "\s+"))
 
 (defun git-timemachine-show-current-revision ()
@@ -51,12 +58,12 @@
 (defun git-timemachine-show-previous-revision ()
  "Show previous revision of file."
  (interactive)
- (git-timemachine-show-revision (cadr (member timemachine-revision (git-timemachine--revisions)))))
+ (git-timemachine-show-revision (cadr (member git-timemachine-revision (git-timemachine--revisions)))))
 
 (defun git-timemachine-show-next-revision ()
  "Show next revision of file."
  (interactive)
- (git-timemachine-show-revision (cadr (member timemachine-revision (reverse (git-timemachine--revisions))))))
+ (git-timemachine-show-revision (cadr (member git-timemachine-revision (reverse (git-timemachine--revisions))))))
 
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
@@ -67,15 +74,15 @@
    (insert
     (shell-command-to-string
      (format "cd %s && git show %s:%s"
-      (shell-quote-argument timemachine-git-directory)
+      (shell-quote-argument git-timemachine-directory)
       (shell-quote-argument revision)
-      (shell-quote-argument timemachine-file))))
+      (shell-quote-argument git-timemachine-file))))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
           (n-of-m (format "(%d/%d)" (- (length revisions) (cl-position revision revisions :test 'equal)) (length revisions))))
     (setq mode-line-format (list "Commit: " revision " -- %b -- " n-of-m " -- [%p]")))
-   (setq timemachine-revision revision)
+   (setq git-timemachine-revision revision)
    (goto-char current-position))))
 
 (defun git-timemachine-quit ()
@@ -86,7 +93,7 @@
 (defun git-timemachine-kill-revision ()
  "Kill the current revisions commit hash."
  (interactive)
- (let ((this-revision timemachine-revision))
+ (let ((this-revision git-timemachine-revision))
   (with-temp-buffer
    (insert this-revision)
    (kill-region (point-min) (point-max)))))
@@ -113,9 +120,9 @@
    (setq buffer-file-name relative-file)
    (set-auto-mode)
    (git-timemachine-mode)
-   (setq-local timemachine-git-directory git-directory)
-   (setq-local timemachine-file relative-file)
-   (setq-local timemachine-revision nil)
+   (setq git-timemachine-directory git-directory
+         git-timemachine-file relative-file
+         git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
    (switch-to-buffer timemachine-buffer))))
 
