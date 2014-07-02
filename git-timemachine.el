@@ -23,10 +23,18 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
+;;; Use git-timemachine to browse historic versions of a file with p
+;;; (previous) and n (next).
+
 (require 'subr-x)
 (require 'cl-lib)
 
+;;; Code:
+
 (defun git-timemachine--revisions ()
+ "List git revisions of current buffers file."
  (split-string
   (shell-command-to-string
    (format "cd %s && git log --pretty=format:%s %s"
@@ -36,18 +44,22 @@
   nil t "\s+"))
 
 (defun git-timemachine-show-current-revision ()
+ "Show last (current) revision of file."
  (interactive)
  (git-timemachine-show-revision (car (git-timemachine--revisions))))
 
 (defun git-timemachine-show-previous-revision ()
+ "Show previous revision of file."
  (interactive)
  (git-timemachine-show-revision (cadr (member timemachine-revision (git-timemachine--revisions)))))
 
 (defun git-timemachine-show-next-revision ()
+ "Show next revision of file."
  (interactive)
  (git-timemachine-show-revision (cadr (member timemachine-revision (reverse (git-timemachine--revisions))))))
 
 (defun git-timemachine-show-revision (revision)
+ "Show a REVISION (commit hash) of the current file."
  (when revision
   (let ((current-position (point)))
    (setq buffer-read-only nil)
@@ -67,18 +79,32 @@
    (goto-char current-position))))
 
 (defun git-timemachine-quit ()
+ "Exit the timemachine."
  (interactive)
  (kill-buffer))
 
 (defun git-timemachine-kill-revision ()
+ "Kill the current revisions commit hash."
  (interactive)
  (let ((this-revision timemachine-revision))
   (with-temp-buffer
    (insert this-revision)
    (kill-region (point-min) (point-max)))))
 
+(define-minor-mode git-timemachine-mode
+ "Git Timemachine, feel the wings of history."
+ :init-value nil
+ :lighter " Timemachine"
+ :keymap
+ '(("p" . git-timemachine-show-previous-revision)
+   ("n" . git-timemachine-show-next-revision)
+   ("q" . git-timemachine-quit)
+   ("w" . git-timemachine-kill-revision))
+ :group 'git-timemachine)
+
 ;;;###autoload
-(defun git-timemachine-mode ()
+(defun git-timemachine ()
+ "Enable git timemachine for file of current buffer."
  (interactive)
  (let* ((git-directory (concat (string-trim-right (shell-command-to-string "git rev-parse --show-toplevel")) "/"))
         (relative-file (string-remove-prefix git-directory (buffer-file-name)))
@@ -86,16 +112,13 @@
   (with-current-buffer (get-buffer-create timemachine-buffer)
    (setq buffer-file-name relative-file)
    (set-auto-mode)
+   (git-timemachine-mode)
    (setq-local timemachine-git-directory git-directory)
    (setq-local timemachine-file relative-file)
    (setq-local timemachine-revision nil)
-   (local-set-key (kbd "p") 'git-timemachine-show-previous-revision)
-   (local-set-key (kbd "n") 'git-timemachine-show-next-revision)
-   (local-set-key (kbd "q") 'git-timemachine-quit)
-   (local-set-key (kbd "w") 'git-timemachine-kill-revision)
    (git-timemachine-show-current-revision)
    (switch-to-buffer timemachine-buffer))))
 
 (provide 'git-timemachine)
 
-;; git-timemachine.el ends here
+;;; git-timemachine.el ends here

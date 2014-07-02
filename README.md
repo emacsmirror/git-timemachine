@@ -4,7 +4,7 @@
 
 Drop git-timemachine.el somewhere in your `load-path`.
 
-Visit a git-controlled file and issue `M-x git-timemachine-mode` (or
+Visit a git-controlled file and issue `M-x git-timemachine` (or
 bind it to a keybinding of your choice).
 
 Use the following keys to navigate historic version of the file
