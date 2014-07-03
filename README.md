@@ -2,9 +2,11 @@
 
 ## Installation
 
-Download git-timemachine.el and drop it somewhere in your `load-path`.
+Installation alternatives:
 
-Alternatively, if you use `el-get`, simply add `git-timemachine` to your packages list.
+- Download git-timemachine.el and drop it somewhere in your `load-path`.
+- If you use `el-get`, simply add `git-timemachine` to your packages list.
+- If you have melpa configured it's available through `package-install`.
 
 ## Usage
 
@@ -16,4 +18,3 @@ Use the following keys to navigate historic version of the file
  - `n` Visit next historic version
  - `w` Copy the hash of the current historic version
  - `q` Exit the time machine.
- 
