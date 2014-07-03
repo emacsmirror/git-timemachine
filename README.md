@@ -1,8 +1,12 @@
 # Git time machine
 
-## Usage
+## Installation
 
-Drop git-timemachine.el somewhere in your `load-path`.
+Download git-timemachine.el and drop it somewhere in your `load-path`.
+
+Alternatively, if you use `el-get`, simply add `git-timemachine` to your packages list.
+
+## Usage
 
 Visit a git-controlled file and issue `M-x git-timemachine` (or
 bind it to a keybinding of your choice).
