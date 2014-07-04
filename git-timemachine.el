@@ -1,11 +1,11 @@
-;;; git-timemachine.el --- Walk through git revisions of a file  -*- lexical-binding: t -*-
+;;; git-timemachine.el --- Walk through git revisions of a file
 
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 1.0
 ;; URL: https://github.com/pidu/git-timemachine
-;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
+;; Package-Requires: ((cl-lib "0.5") (s "1.9.0"))
 ;; Keywords: git
 
 ;; This file is not part of GNU Emacs
@@ -28,7 +28,7 @@
 ;;; Use git-timemachine to browse historic versions of a file with p
 ;;; (previous) and n (next).
 
-(require 'subr-x)
+(require 's)
 (require 'cl-lib)
 
 ;;; Code:
@@ -113,8 +113,8 @@
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."
  (interactive)
- (let* ((git-directory (concat (string-trim-right (shell-command-to-string "git rev-parse --show-toplevel")) "/"))
-        (relative-file (string-remove-prefix git-directory (buffer-file-name)))
+ (let* ((git-directory (concat (s-trim-right (shell-command-to-string "git rev-parse --show-toplevel")) "/"))
+        (relative-file (s-chop-prefix git-directory (buffer-file-name)))
         (timemachine-buffer (format "timemachine:%s" (buffer-name))))
   (with-current-buffer (get-buffer-create timemachine-buffer)
    (setq buffer-file-name relative-file)
