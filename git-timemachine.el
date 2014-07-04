@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 1.1
+;; Version: 1.2
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Package-Requires: ((cl-lib "0.5") (s "1.9.0"))
 ;; Keywords: git
@@ -47,8 +47,7 @@
    (format "cd %s && git log --pretty=format:%s %s"
     (shell-quote-argument git-timemachine-directory)
     (shell-quote-argument "%h")
-    (shell-quote-argument git-timemachine-file)))
-  nil t "\s+"))
+    (shell-quote-argument git-timemachine-file)))))
 
 (defun git-timemachine-show-current-revision ()
  "Show last (current) revision of file."
