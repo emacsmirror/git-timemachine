@@ -95,6 +95,7 @@
  (let ((this-revision git-timemachine-revision))
   (with-temp-buffer
    (insert this-revision)
+   (message (buffer-string))
    (kill-region (point-min) (point-max)))))
 
 (define-minor-mode git-timemachine-mode
