@@ -121,7 +121,7 @@
    (set-auto-mode)
    (git-timemachine-mode)
    (setq git-timemachine-directory git-directory
-         git-timemachine-file (s-chop-prefix git-directory file-name)
+         git-timemachine-file (file-relative-name file-name git-directory)
          git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
    (switch-to-buffer timemachine-buffer))))
