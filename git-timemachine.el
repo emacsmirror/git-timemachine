@@ -69,12 +69,8 @@
   (let ((current-position (point)))
    (setq buffer-read-only nil)
    (erase-buffer)
-   (insert
-    (shell-command-to-string
-     (format "cd %s && git show %s:%s"
-      (shell-quote-argument git-timemachine-directory)
-      (shell-quote-argument revision)
-      (shell-quote-argument git-timemachine-file))))
+   (let ((default-directory git-timemachine-directory))
+    (call-process "git" nil t nil "show" (concat revision ":" git-timemachine-file)))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
