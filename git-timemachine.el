@@ -41,12 +41,8 @@
 
 (defun git-timemachine--revisions ()
  "List git revisions of current buffers file."
- (split-string
-  (shell-command-to-string
-   (format "cd %s && git log --pretty=format:%s %s"
-    (shell-quote-argument git-timemachine-directory)
-    (shell-quote-argument "%h")
-    (shell-quote-argument git-timemachine-file)))))
+ (let ((default-directory git-timemachine-directory))
+  (process-lines "git" "log" "--pretty=format:%h" git-timemachine-file)))
 
 (defun git-timemachine-show-current-revision ()
  "Show last (current) revision of file."
