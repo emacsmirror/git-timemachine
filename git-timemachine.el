@@ -113,7 +113,7 @@
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."
  (interactive)
- (let* ((git-directory (concat (s-trim-right (shell-command-to-string "git rev-parse --show-toplevel")) "/"))
+ (let* ((git-directory (concat (car (process-lines "git" "rev-parse" "--show-toplevel")) "/"))
         (file-name (buffer-file-name))
         (timemachine-buffer (format "timemachine:%s" (buffer-name))))
   (with-current-buffer (get-buffer-create timemachine-buffer)
