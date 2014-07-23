@@ -5,7 +5,7 @@
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 1.3
 ;; URL: https://github.com/pidu/git-timemachine
-;; Package-Requires: ((cl-lib "0.5") (s "1.9.0"))
+;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: git
 
 ;; This file is not part of GNU Emacs
@@ -28,7 +28,6 @@
 ;;; Use git-timemachine to browse historic versions of a file with p
 ;;; (previous) and n (next).
 
-(require 's)
 (require 'cl-lib)
 
 ;;; Code:
