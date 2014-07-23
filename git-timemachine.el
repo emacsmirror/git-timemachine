@@ -91,11 +91,8 @@
 (defun git-timemachine-kill-revision ()
  "Kill the current revisions commit hash."
  (interactive)
- (let ((this-revision git-timemachine-revision))
-  (with-temp-buffer
-   (insert this-revision)
-   (message (buffer-string))
-   (kill-region (point-min) (point-max)))))
+ (message git-timemachine-revision)
+ (kill-new git-timemachine-revision))
 
 (define-minor-mode git-timemachine-mode
  "Git Timemachine, feel the wings of history."
