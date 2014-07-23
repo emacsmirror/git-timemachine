@@ -114,14 +114,14 @@
  "Enable git timemachine for file of current buffer."
  (interactive)
  (let* ((git-directory (concat (s-trim-right (shell-command-to-string "git rev-parse --show-toplevel")) "/"))
-        (relative-file (s-chop-prefix git-directory (buffer-file-name)))
+        (file-name (buffer-file-name))
         (timemachine-buffer (format "timemachine:%s" (buffer-name))))
   (with-current-buffer (get-buffer-create timemachine-buffer)
-   (setq buffer-file-name relative-file)
+   (setq buffer-file-name file-name)
    (set-auto-mode)
    (git-timemachine-mode)
    (setq git-timemachine-directory git-directory
-         git-timemachine-file relative-file
+         git-timemachine-file (s-chop-prefix git-directory file-name)
          git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
    (switch-to-buffer timemachine-buffer))))
