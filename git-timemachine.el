@@ -103,10 +103,11 @@
  (interactive)
  (let ((git-directory (file-name-as-directory (car (process-lines "git" "rev-parse" "--show-toplevel"))))
        (file-name (buffer-file-name))
-       (timemachine-buffer (format "timemachine:%s" (buffer-name))))
+       (timemachine-buffer (format "timemachine:%s" (buffer-name)))
+       (mode major-mode))
   (with-current-buffer (get-buffer-create timemachine-buffer)
    (setq buffer-file-name file-name)
-   (set-auto-mode)
+   (funcall mode)
    (git-timemachine-mode)
    (setq git-timemachine-directory git-directory
          git-timemachine-file (file-relative-name file-name git-directory)
