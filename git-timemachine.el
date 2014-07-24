@@ -5,7 +5,7 @@
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 1.3
 ;; URL: https://github.com/pidu/git-timemachine
-;; Package-Requires: ((cl-lib "0.5") (s "1.9.0"))
+;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: git
 
 ;; This file is not part of GNU Emacs
@@ -28,7 +28,6 @@
 ;;; Use git-timemachine to browse historic versions of a file with p
 ;;; (previous) and n (next).
 
-(require 's)
 (require 'cl-lib)
 
 ;;; Code:
@@ -42,12 +41,8 @@
 
 (defun git-timemachine--revisions ()
  "List git revisions of current buffers file."
- (split-string
-  (shell-command-to-string
-   (format "cd %s && git log --pretty=format:%s %s"
-    (shell-quote-argument git-timemachine-directory)
-    (shell-quote-argument "%h")
-    (shell-quote-argument git-timemachine-file)))))
+ (let ((default-directory git-timemachine-directory))
+  (process-lines "git" "log" "--pretty=format:%h" git-timemachine-file)))
 
 (defun git-timemachine-show-current-revision ()
  "Show last (current) revision of file."
@@ -70,12 +65,8 @@
   (let ((current-position (point)))
    (setq buffer-read-only nil)
    (erase-buffer)
-   (insert
-    (shell-command-to-string
-     (format "cd %s && git show %s:%s"
-      (shell-quote-argument git-timemachine-directory)
-      (shell-quote-argument revision)
-      (shell-quote-argument git-timemachine-file))))
+   (let ((default-directory git-timemachine-directory))
+    (call-process "git" nil t nil "show" (concat revision ":" git-timemachine-file)))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
@@ -92,11 +83,8 @@
 (defun git-timemachine-kill-revision ()
  "Kill the current revisions commit hash."
  (interactive)
- (let ((this-revision git-timemachine-revision))
-  (with-temp-buffer
-   (insert this-revision)
-   (message (buffer-string))
-   (kill-region (point-min) (point-max)))))
+ (message git-timemachine-revision)
+ (kill-new git-timemachine-revision))
 
 (define-minor-mode git-timemachine-mode
  "Git Timemachine, feel the wings of history."
@@ -113,15 +101,15 @@
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."
  (interactive)
- (let* ((git-directory (concat (s-trim-right (shell-command-to-string "git rev-parse --show-toplevel")) "/"))
-        (relative-file (s-chop-prefix git-directory (buffer-file-name)))
-        (timemachine-buffer (format "timemachine:%s" (buffer-name))))
+ (let ((git-directory (file-name-as-directory (car (process-lines "git" "rev-parse" "--show-toplevel"))))
+       (file-name (buffer-file-name))
+       (timemachine-buffer (format "timemachine:%s" (buffer-name))))
   (with-current-buffer (get-buffer-create timemachine-buffer)
-   (setq buffer-file-name relative-file)
+   (setq buffer-file-name file-name)
    (set-auto-mode)
    (git-timemachine-mode)
    (setq git-timemachine-directory git-directory
-         git-timemachine-file relative-file
+         git-timemachine-file (file-relative-name file-name git-directory)
          git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
    (switch-to-buffer timemachine-buffer))))
