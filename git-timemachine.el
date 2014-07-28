@@ -97,10 +97,18 @@
    ("w" . git-timemachine-kill-revision))
  :group 'git-timemachine)
 
+(defun git-timemachine-validate (file)
+ (unless file
+  (error "This buffer is not related to file."))
+ (with-temp-buffer
+  (unless (zerop (call-process "git" nil nil nil "ls-files" "--error-unmatch" file))
+   (error "This file is not git tracked."))))
+
 ;;;###autoload
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."
  (interactive)
+ (git-timemachine-validate (buffer-file-name))
  (let ((git-directory (file-name-as-directory (car (process-lines "git" "rev-parse" "--show-toplevel"))))
        (file-name (buffer-file-name))
        (timemachine-buffer (format "timemachine:%s" (buffer-name)))
