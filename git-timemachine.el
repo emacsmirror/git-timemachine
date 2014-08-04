@@ -29,6 +29,7 @@
 ;;; (previous) and n (next).
 
 (require 'cl-lib)
+(require 'vc-git)
 
 ;;; Code:
 
@@ -102,9 +103,8 @@
 Call with the value of 'buffer-file-name."
  (unless file
   (error "This buffer is not visiting a file"))
- (with-temp-buffer
-  (unless (zerop (call-process "git" nil nil nil "ls-files" "--error-unmatch" file))
-   (error "This file is not git tracked"))))
+ (unless (vc-git-registered file)
+  (error "This file is not git tracked")))
 
 ;;;###autoload
 (defun git-timemachine ()
