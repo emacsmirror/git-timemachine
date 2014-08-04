@@ -28,10 +28,10 @@
 ;;; Use git-timemachine to browse historic versions of a file with p
 ;;; (previous) and n (next).
 
+;;; Code:
+
 (require 'cl-lib)
 (require 'vc-git)
-
-;;; Code:
 
 (defvar git-timemachine-directory nil)
 (make-variable-buffer-local 'git-timemachine-directory)
