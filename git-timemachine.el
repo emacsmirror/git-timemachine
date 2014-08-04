@@ -98,9 +98,10 @@
  :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)
- "Validate that there is a FILE and that it belongs to a git repository. Call with the value of 'buffer-file-name."
+ "Validate that there is a FILE and that it belongs to a git repository.
+Call with the value of 'buffer-file-name."
  (unless file
-  (error "This buffer is not related to file"))
+  (error "This buffer is not visiting a file"))
  (with-temp-buffer
   (unless (zerop (call-process "git" nil nil nil "ls-files" "--error-unmatch" file))
    (error "This file is not git tracked"))))
