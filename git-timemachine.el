@@ -111,7 +111,7 @@ Call with the value of 'buffer-file-name."
  "Enable git timemachine for file of current buffer."
  (interactive)
  (git-timemachine-validate (buffer-file-name))
- (let ((git-directory (file-name-as-directory (car (process-lines "git" "rev-parse" "--show-toplevel"))))
+ (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
        (file-name (buffer-file-name))
        (timemachine-buffer (format "timemachine:%s" (buffer-name)))
        (mode major-mode))
