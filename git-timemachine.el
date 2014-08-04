@@ -35,8 +35,10 @@
 
 (defvar git-timemachine-directory nil)
 (make-variable-buffer-local 'git-timemachine-directory)
+
 (defvar git-timemachine-file nil)
 (make-variable-buffer-local 'git-timemachine-file)
+
 (defvar git-timemachine-revision nil)
 (make-variable-buffer-local 'git-timemachine-revision)
 
