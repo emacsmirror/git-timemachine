@@ -1,5 +1,7 @@
 # Git time machine
 
+![Timemachine](timemachine.gif)
+
 ## Installation
 
 Installation alternatives:
