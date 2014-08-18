@@ -48,8 +48,8 @@
        (file git-timemachine-file))
   (with-temp-buffer
    (unless (zerop (process-file vc-git-program nil t nil
-                                "--no-pager" "log" "--pretty=format:%h" file))
-    (error "Failed: 'git log --pretty=format:%%h' %s" file))
+                   "--no-pager" "log" "--abbrev-commit" "--pretty=format:%h" file))
+    (error "Failed: 'git log --abbrev-commit --pretty=format:%%h' %s" file))
    (goto-char (point-min))
    (let (lines)
     (while (not (eobp))
