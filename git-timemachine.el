@@ -44,8 +44,18 @@
 
 (defun git-timemachine--revisions ()
  "List git revisions of current buffers file."
- (let ((default-directory git-timemachine-directory))
-  (process-lines vc-git-program "log" "--pretty=format:%h" git-timemachine-file)))
+ (let ((default-directory git-timemachine-directory)
+       (file git-timemachine-file))
+  (with-temp-buffer
+   (unless (zerop (process-file vc-git-program nil t nil
+                                "--no-pager" "log" "--pretty=format:%h" file))
+    (error "Failed: 'git log --pretty=format:%%h' %s" file))
+   (goto-char (point-min))
+   (let (lines)
+    (while (not (eobp))
+     (push (buffer-substring-no-properties (line-beginning-position) (line-end-position)) lines)
+     (forward-line 1))
+    (nreverse lines)))))
 
 (defun git-timemachine-show-current-revision ()
  "Show last (current) revision of file."
@@ -69,7 +79,7 @@
    (setq buffer-read-only nil)
    (erase-buffer)
    (let ((default-directory git-timemachine-directory))
-    (call-process vc-git-program nil t nil "show" 
+    (process-file vc-git-program nil t nil "--no-pager" "show"
                   (concat revision ":" git-timemachine-file)))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
