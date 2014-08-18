@@ -85,7 +85,9 @@
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
           (n-of-m (format "(%d/%d)" (- (length revisions) (cl-position revision revisions :test 'equal)) (length revisions))))
-    (setq mode-line-format (list "Commit: " revision " -- %b -- " n-of-m " -- [%p]")))
+    (setq mode-line-buffer-identification
+          (list (propertized-buffer-identification "%12b")
+                "@" (propertize revision 'face 'bold) " " n-of-m)))
    (setq git-timemachine-revision revision)
    (goto-char current-position))))
 
