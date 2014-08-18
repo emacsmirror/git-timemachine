@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 1.6
+;; Version: 1.7
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: git
@@ -47,8 +47,7 @@
  (let ((default-directory git-timemachine-directory)
        (file git-timemachine-file))
   (with-temp-buffer
-   (unless (zerop (process-file vc-git-program nil t nil
-                   "--no-pager" "log" "--abbrev-commit" "--pretty=format:%h" file))
+   (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--abbrev-commit" "--pretty=format:%h" file))
     (error "Failed: 'git log --abbrev-commit --pretty=format:%%h' %s" file))
    (goto-char (point-min))
    (let (lines)
@@ -91,16 +90,34 @@
    (setq git-timemachine-revision revision)
    (goto-char current-position))))
 
+(defun git-timemachine-full-revision ()
+ "Translated the abbreviated revision to its full counter part."
+ (let ((default-directory git-timemachine-directory)
+       (revision git-timemachine-revision)
+       (file git-timemachine-file))
+  (with-temp-buffer
+   (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "rev-parse" revision "--" file))
+    (error "Failed: 'git --no-pager rev-parse' %s -- %s" revision file))
+   (goto-char (point-min))
+   (buffer-substring-no-properties (point) (line-end-position)))))
+
 (defun git-timemachine-quit ()
  "Exit the timemachine."
  (interactive)
  (kill-buffer))
 
 (defun git-timemachine-kill-revision ()
- "Kill the current revisions commit hash."
+ "Kill the current revisions abbreviated commit hash."
  (interactive)
  (message git-timemachine-revision)
  (kill-new git-timemachine-revision))
+
+(defun git-timemachine-kill-full-revision ()
+ "Kill the current revisions full commit hash."
+ (interactive)
+ (let ((revision (git-timemachine-full-revision)))
+  (message revision)
+  (kill-new revision)))
 
 (define-minor-mode git-timemachine-mode
  "Git Timemachine, feel the wings of history."
@@ -110,7 +127,8 @@
  '(("p" . git-timemachine-show-previous-revision)
    ("n" . git-timemachine-show-next-revision)
    ("q" . git-timemachine-quit)
-   ("w" . git-timemachine-kill-revision))
+   ("w" . git-timemachine-kill-revision)
+   ("W" . git-timemachine-kill-full-revision))
  :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)
