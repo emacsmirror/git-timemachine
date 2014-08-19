@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 1.7
+;; Version: 1.8
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: git
@@ -111,7 +111,7 @@
 (defun git-timemachine-kill-abbreviated-revision ()
  "Kill the current revisions full commit hash."
  (interactive)
- (let ((revision (git-timemachine-abbreviated-revision)))
+ (let ((revision (git-timemachine-abbreviate git-timemachine-revision)))
   (message revision)
   (kill-new revision)))
 
