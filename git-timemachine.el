@@ -33,22 +33,25 @@
 (require 'cl-lib)
 (require 'vc-git)
 
+(defcustom git-timemachine-abbreviation-length 12
+ "Number of chars from the full sha1 hash to use for abbreviation."
+ :group 'git-timemachine)
+
 (defvar git-timemachine-directory nil)
-(make-variable-buffer-local 'git-timemachine-directory)
-
 (defvar git-timemachine-file nil)
-(make-variable-buffer-local 'git-timemachine-file)
-
 (defvar git-timemachine-revision nil)
+
+(make-variable-buffer-local 'git-timemachine-directory)
 (make-variable-buffer-local 'git-timemachine-revision)
+(make-variable-buffer-local 'git-timemachine-file)
 
 (defun git-timemachine--revisions ()
  "List git revisions of current buffers file."
  (let ((default-directory git-timemachine-directory)
        (file git-timemachine-file))
   (with-temp-buffer
-   (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--abbrev-commit" "--pretty=format:%h" file))
-    (error "Failed: 'git log --abbrev-commit --pretty=format:%%h' %s" file))
+   (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--pretty=format:%H" file))
+    (error "Failed: 'git log --pretty=format:%%H' %s" file))
    (goto-char (point-min))
    (let (lines)
     (while (not (eobp))
@@ -79,27 +82,20 @@
    (erase-buffer)
    (let ((default-directory git-timemachine-directory))
     (process-file vc-git-program nil t nil "--no-pager" "show"
-                  (concat revision ":" git-timemachine-file)))
+     (concat revision ":" git-timemachine-file)))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
           (n-of-m (format "(%d/%d)" (- (length revisions) (cl-position revision revisions :test 'equal)) (length revisions))))
     (setq mode-line-buffer-identification
-          (list (propertized-buffer-identification "%12b")
-                "@" (propertize revision 'face 'bold) " " n-of-m)))
+     (list (propertized-buffer-identification "%12b") "@"
+      (propertize (git-timemachine-abbreviate revision) 'face 'bold) " " n-of-m)))
    (setq git-timemachine-revision revision)
    (goto-char current-position))))
 
-(defun git-timemachine-full-revision ()
- "Translated the abbreviated revision to its full counter part."
- (let ((default-directory git-timemachine-directory)
-       (revision git-timemachine-revision)
-       (file git-timemachine-file))
-  (with-temp-buffer
-   (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "rev-parse" revision "--" file))
-    (error "Failed: 'git --no-pager rev-parse' %s -- %s" revision file))
-   (goto-char (point-min))
-   (buffer-substring-no-properties (point) (line-end-position)))))
+(defun git-timemachine-abbreviate (revision)
+ "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
+ (substring revision 0 git-timemachine-abbreviation-length))
 
 (defun git-timemachine-quit ()
  "Exit the timemachine."
@@ -112,10 +108,10 @@
  (message git-timemachine-revision)
  (kill-new git-timemachine-revision))
 
-(defun git-timemachine-kill-full-revision ()
+(defun git-timemachine-kill-abbreviated-revision ()
  "Kill the current revisions full commit hash."
  (interactive)
- (let ((revision (git-timemachine-full-revision)))
+ (let ((revision (git-timemachine-abbreviated-revision)))
   (message revision)
   (kill-new revision)))
 
@@ -127,8 +123,8 @@
  '(("p" . git-timemachine-show-previous-revision)
    ("n" . git-timemachine-show-next-revision)
    ("q" . git-timemachine-quit)
-   ("w" . git-timemachine-kill-revision)
-   ("W" . git-timemachine-kill-full-revision))
+   ("w" . git-timemachine-kill-abbreviated-revision)
+   ("W" . git-timemachine-kill-revision))
  :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)
