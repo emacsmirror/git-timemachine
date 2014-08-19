@@ -21,3 +21,9 @@ Use the following keys to navigate historic version of the file
  - `w` Copy the abbreviated hash of the current historic version
  - `W` Copy the full hash of the current historic version
  - `q` Exit the time machine.
+
+## Customize
+
+Set `git-timemachine-abbreviation-length` (default 12) to your
+preferred length for abbreviated commit hashes. Also `M-x customize
+[git-timemachine]`.
