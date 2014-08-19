@@ -38,8 +38,8 @@
  :group 'git-timemachine)
 
 (defvar git-timemachine-directory nil)
-(defvar git-timemachine-file nil)
 (defvar git-timemachine-revision nil)
+(defvar git-timemachine-file nil)
 
 (make-variable-buffer-local 'git-timemachine-directory)
 (make-variable-buffer-local 'git-timemachine-revision)
