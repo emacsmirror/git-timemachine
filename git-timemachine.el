@@ -143,6 +143,7 @@ Call with the value of 'buffer-file-name."
  (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
        (file-name (buffer-file-name))
        (timemachine-buffer (format "timemachine:%s" (buffer-name)))
+       (cur-line (line-number-at-pos))
        (mode major-mode))
   (with-current-buffer (get-buffer-create timemachine-buffer)
    (setq buffer-file-name file-name)
@@ -152,7 +153,9 @@ Call with the value of 'buffer-file-name."
          git-timemachine-file (file-relative-name file-name git-directory)
          git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
-   (switch-to-buffer timemachine-buffer))))
+   (switch-to-buffer timemachine-buffer)
+   (goto-char (point-min))
+   (forward-line (1- cur-line)))))
 
 (provide 'git-timemachine)
 
