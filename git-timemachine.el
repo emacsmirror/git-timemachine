@@ -154,7 +154,8 @@ Call with the value of 'buffer-file-name."
          git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
    (switch-to-buffer timemachine-buffer)
-   (goto-line cur-line))))
+   (goto-char (point-min))
+   (forward-line (1- cur-line)))))
 
 (provide 'git-timemachine)
 
