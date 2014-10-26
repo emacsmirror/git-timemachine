@@ -4,6 +4,8 @@
 
 ## Installation
 
+[![MELPA](http://melpa.org/packages/git-timemachine-badge.svg)](http://melpa.org/#/git-timemachine)
+
 Installation alternatives:
 
 - Download git-timemachine.el and drop it somewhere in your `load-path`.
