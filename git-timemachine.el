@@ -5,7 +5,6 @@
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 1.8
 ;; URL: https://github.com/pidu/git-timemachine
-;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: git
 
 ;; This file is not part of GNU Emacs
@@ -30,7 +29,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'vc-git)
 
 (defcustom git-timemachine-abbreviation-length 12
