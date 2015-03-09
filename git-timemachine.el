@@ -163,16 +163,16 @@ Call with the value of 'buffer-file-name."
        (cur-line (line-number-at-pos))
        (mode major-mode))
   (with-current-buffer (get-buffer-create timemachine-buffer)
+   (switch-to-buffer timemachine-buffer)
    (setq buffer-file-name file-name)
    (funcall mode)
-   (git-timemachine-mode)
    (setq git-timemachine-directory git-directory
          git-timemachine-file (file-relative-name file-name git-directory)
          git-timemachine-revision nil)
    (git-timemachine-show-current-revision)
-   (switch-to-buffer timemachine-buffer)
    (goto-char (point-min))
-   (forward-line (1- cur-line)))))
+   (forward-line (1- cur-line))
+   (git-timemachine-mode))))
 
 (provide 'git-timemachine)
 
