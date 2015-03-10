@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 1.9
+;; Version: 2.0
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
