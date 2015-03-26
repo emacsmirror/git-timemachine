@@ -30,6 +30,7 @@
 ;;; Code:
 
 (require 'vc-git)
+(require 'cl-lib)
 
 (defcustom git-timemachine-abbreviation-length 12
  "Number of chars from the full sha1 hash to use for abbreviation."
@@ -74,15 +75,23 @@ will be shown in the minibuffer while navigating commits."
  (interactive)
  (git-timemachine-show-revision (car (git-timemachine--revisions))))
 
+(defun git-timemachine--next-revision (revisions)
+  "Return the revision following the current revision in REVISIONS."
+  (cadr (cl-member
+         (car git-timemachine-revision) ;; takes the hash
+         revisions
+         :key #'car ;; only compare hashes
+         :test #'string=)))
+
 (defun git-timemachine-show-previous-revision ()
- "Show previous revision of file."
- (interactive)
- (git-timemachine-show-revision (cadr (member git-timemachine-revision (git-timemachine--revisions)))))
+  "Show previous revision of file."
+  (interactive)
+  (git-timemachine-show-revision (git-timemachine--next-revision (git-timemachine--revisions))))
 
 (defun git-timemachine-show-next-revision ()
- "Show next revision of file."
- (interactive)
- (git-timemachine-show-revision (cadr (member git-timemachine-revision (reverse (git-timemachine--revisions))))))
+  "Show next revision of file."
+  (interactive)
+  (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
 
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
