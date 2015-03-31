@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.1
+;; Version: 2.2
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -161,6 +161,14 @@ Call with the value of 'buffer-file-name."
  (unless (vc-git-registered file)
   (error "This file is not git tracked")))
 
+;;;###autoload
+(defun git-timemachine-toggle ()
+ "Toggle git timemachine mode"
+ (interactive)
+ (if (bound-and-true-p git-timemachine-mode)
+  (git-timemachine-quit)
+  (git-timemachine)))
+ 
 ;;;###autoload
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."

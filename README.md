@@ -14,8 +14,9 @@ Installation alternatives:
 
 ## Usage
 
-Visit a git-controlled file and issue `M-x git-timemachine` (or
-bind it to a keybinding of your choice).
+Visit a git-controlled file and issue `M-x git-timemachine` (or bind
+it to a keybinding of your choice). If you just need to toggle the
+time machine you can use `M-x git-timemachine-toggle`.
 
 Use the following keys to navigate historic version of the file
  - `p` Visit previous historic version
