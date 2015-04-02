@@ -93,6 +93,14 @@ will be shown in the minibuffer while navigating commits."
   (interactive)
   (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
 
+(defun git-timemachine-show-nth-revision (rev-number)
+  "Show the revision requested."
+  (interactive "nEnter revision number: ")
+  (let ((revision (nth (1- rev-number) (reverse (git-timemachine--revisions))))
+        (num-revisions (length (git-timemachine--revisions))))
+    (if revision (git-timemachine-show-revision revision)
+      (message "Only %d revisions exist." num-revisions))))
+
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
  (when revision
@@ -148,6 +156,7 @@ will be shown in the minibuffer while navigating commits."
  :keymap
  '(("p" . git-timemachine-show-previous-revision)
    ("n" . git-timemachine-show-next-revision)
+   ("g" . git-timemachine-show-nth-revision)
    ("q" . git-timemachine-quit)
    ("w" . git-timemachine-kill-abbreviated-revision)
    ("W" . git-timemachine-kill-revision))
