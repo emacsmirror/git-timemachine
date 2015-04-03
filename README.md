@@ -23,6 +23,7 @@ Use the following keys to navigate historic version of the file
  - `n` Visit next historic version
  - `w` Copy the abbreviated hash of the current historic version
  - `W` Copy the full hash of the current historic version
+ - `g` Goto nth revision
  - `q` Exit the time machine.
 
 ## Customize
