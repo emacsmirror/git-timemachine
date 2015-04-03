@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.2
+;; Version: 2.3
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -94,12 +94,13 @@ will be shown in the minibuffer while navigating commits."
   (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
 
 (defun git-timemachine-show-nth-revision (rev-number)
-  "Show the revision requested."
-  (interactive "nEnter revision number: ")
-  (let ((revision (nth (1- rev-number) (reverse (git-timemachine--revisions))))
-        (num-revisions (length (git-timemachine--revisions))))
-    (if revision (git-timemachine-show-revision revision)
-      (message "Only %d revisions exist." num-revisions))))
+  "Show the REV-NUMBER revision."
+ (interactive "nEnter revision number: ")
+ (let* ((revisions (reverse (git-timemachine--revisions)))
+        (revision (nth (1- rev-number) revisions))
+        (num-revisions (length revisions)))
+  (if revision (git-timemachine-show-revision revision)
+   (message "Only %d revisions exist." num-revisions))))
 
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
@@ -172,7 +173,7 @@ Call with the value of 'buffer-file-name."
 
 ;;;###autoload
 (defun git-timemachine-toggle ()
- "Toggle git timemachine mode"
+ "Toggle git timemachine mode."
  (interactive)
  (if (bound-and-true-p git-timemachine-mode)
   (git-timemachine-quit)
