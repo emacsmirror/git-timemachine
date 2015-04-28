@@ -92,7 +92,7 @@ will be shown in the minibuffer while navigating commits."
  (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
 
 (defun git-timemachine-show-nth-revision (rev-number)
-  "Show the REV-NUMBER revision."
+ "Show the REV-NUMBER revision."
  (interactive "nEnter revision number: ")
  (let* ((revisions (reverse (git-timemachine--revisions)))
         (revision (nth (1- rev-number) revisions))
