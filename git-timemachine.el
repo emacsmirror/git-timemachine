@@ -49,28 +49,36 @@ will be shown in the minibuffer while navigating commits."
 (make-variable-buffer-local 'git-timemachine-revision)
 (make-variable-buffer-local 'git-timemachine-file)
 
+(defvar-local git-timemachine--revisions-cache nil)
+
 (defun git-timemachine--revisions ()
  "List git revisions of current buffers file."
- (let ((default-directory git-timemachine-directory)
-       (file git-timemachine-file))
-  (with-temp-buffer
-   (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H:%ar:%ad" file))
-    (error "Failed: 'git log --name-only --follow --pretty=format:%%H:%%ar:%%ad' %s" file))
-   (goto-char (point-min))
-   (let ((lines)
-         (commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
-    (while (not (eobp))
-     (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-      (string-match "\\([^:]*\\):\\([^:]*\\):\\(.*\\)" line)
-      (let ((commit (match-string 1 line))
-            (date-relative (match-string 2 line))
-            (date-full (match-string 3 line)))
-       (forward-line 1)
-       (let ((file-name (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-        (push (list commit file-name commit-number date-relative date-full) lines))))
-     (setq commit-number (1- commit-number))
-     (forward-line 2))
-    (nreverse lines)))))
+ (if git-timemachine--revisions-cache
+     git-timemachine--revisions-cache
+   (setq git-timemachine--revisions-cache
+         (prog2
+             (message "Fetching Revisions...")
+             (let ((default-directory git-timemachine-directory)
+                   (file git-timemachine-file))
+               (with-temp-buffer
+                 (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H:%ar:%ad" file))
+                   (error "Failed: 'git log --name-only --follow --pretty=format:%%H:%%ar:%%ad' %s" file))
+                 (goto-char (point-min))
+                 (let ((lines)
+                       (commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
+                   (while (not (eobp))
+                     (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                       (string-match "\\([^:]*\\):\\([^:]*\\):\\(.*\\)" line)
+                       (let ((commit (match-string 1 line))
+                             (date-relative (match-string 2 line))
+                             (date-full (match-string 3 line)))
+                         (forward-line 1)
+                         (let ((file-name (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                           (push (list commit file-name commit-number date-relative date-full) lines))))
+                     (setq commit-number (1- commit-number))
+                     (forward-line 2))
+                   (nreverse lines))))
+           (message "Fetching Revisions...done")))))
 
 (defun git-timemachine-show-current-revision ()
  "Show last (current) revision of file."
@@ -182,6 +190,7 @@ Call with the value of 'buffer-file-name."
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."
  (interactive)
+ (setq git-timemachine--revisions-cache nil)
  (git-timemachine-validate (buffer-file-name))
  (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
        (file-name (buffer-file-name))
