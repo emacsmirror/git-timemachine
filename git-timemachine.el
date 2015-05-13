@@ -41,6 +41,11 @@
 will be shown in the minibuffer while navigating commits."
  :group 'git-timemachine)
 
+(defface git-timemachine-commit
+ '((default :weight bold))
+ "Face for git timemachine commit sha"
+ :group 'git-timemachine)
+
 (defvar-local git-timemachine-directory nil)
 (defvar-local git-timemachine-revision nil)
 (defvar-local git-timemachine-file nil)
@@ -123,7 +128,7 @@ will be shown in the minibuffer while navigating commits."
           (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
     (setq mode-line-buffer-identification
      (list (propertized-buffer-identification "%12b") "@"
-      (propertize (git-timemachine-abbreviate commit) 'face 'bold) " name:" revision-file-name" " n-of-m)))
+      (propertize (git-timemachine-abbreviate commit) 'face 'git-timemachine-commit) " name:" revision-file-name" " n-of-m)))
    (setq git-timemachine-revision revision)
    (goto-char current-position)
    (when git-timemachine-show-minibuffer-details
