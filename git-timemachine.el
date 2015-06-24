@@ -76,7 +76,7 @@ Available values are:
           (file git-timemachine-file))
      (with-temp-buffer
       (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H:%ar:%ad:%s" file))
-       (error "Failed: 'git log --name-only --follow --pretty=format:%%H:%%ar:%%ad' %s" file))
+       (error "Git log command exited with non-zero exit status for file: %s" file))
       (goto-char (point-min))
       (let ((lines)
             (commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
