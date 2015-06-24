@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.6
+;; Version: 2.7
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -46,6 +46,20 @@ will be shown in the minibuffer while navigating commits."
  "Face for git timemachine commit sha"
  :group 'git-timemachine)
 
+(defface git-timemachine-minibuffer-detail-face
+ '((t (:foreground "yellow")))
+ "How to display the minibuffer detail"
+ :group 'git-timemachine)
+
+(defcustom git-timemachine-minibuffer-detail
+ 'subject
+ "What to display when `git-timemachine-show-minibuffer-details` is t.
+Available values are:
+`commit` : The SHA hash of the commit
+`subject`: The subject of the commit message"
+ :type '(radio (const :tag "Commit SHA" commit) (const :tag "Commit Subject" subject))
+ :group 'git-timemachine)
+
 (defvar-local git-timemachine-directory nil)
 (defvar-local git-timemachine-revision nil)
 (defvar-local git-timemachine-file nil)
@@ -61,20 +75,21 @@ will be shown in the minibuffer while navigating commits."
     (let ((default-directory git-timemachine-directory)
           (file git-timemachine-file))
      (with-temp-buffer
-      (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H:%ar:%ad" file))
+      (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H:%ar:%ad:%s" file))
        (error "Failed: 'git log --name-only --follow --pretty=format:%%H:%%ar:%%ad' %s" file))
       (goto-char (point-min))
       (let ((lines)
             (commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
        (while (not (eobp))
         (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-         (string-match "\\([^:]*\\):\\([^:]*\\):\\(.*\\)" line)
+         (string-match "\\([^:]*\\):\\([^:]*\\):\\(.*\\):\\(.*\\)" line)
          (let ((commit (match-string 1 line))
                (date-relative (match-string 2 line))
-               (date-full (match-string 3 line)))
+               (date-full (match-string 3 line))
+               (subject (match-string 4 line)))
           (forward-line 1)
           (let ((file-name (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-           (push (list commit file-name commit-number date-relative date-full) lines))))
+           (push (list commit file-name commit-number date-relative date-full subject) lines))))
         (setq commit-number (1- commit-number))
         (forward-line 2))
        (nreverse lines))))
@@ -116,7 +131,8 @@ will be shown in the minibuffer while navigating commits."
         (revision-file-name (nth 1 revision))
         (commit-index (nth 2 revision))
         (date-relative (nth 3 revision))
-        (date-full (nth 4 revision)))
+        (date-full (nth 4 revision))
+        (subject (nth 5 revision)))
    (setq buffer-read-only nil)
    (erase-buffer)
    (let ((default-directory git-timemachine-directory))
@@ -132,7 +148,17 @@ will be shown in the minibuffer while navigating commits."
    (setq git-timemachine-revision revision)
    (goto-char current-position)
    (when git-timemachine-show-minibuffer-details
-    (message (format "commit %s %s (%s)" commit date-full date-relative))))))
+    (git-timemachine--show-minibuffer-details revision)))))
+
+(defun git-timemachine--show-minibuffer-details (revision)
+ "Show details for REVISION in minibuffer."
+ (let ((detail
+        (if (eq git-timemachine-minibuffer-detail 'commit)
+         (car revision)
+         (nth 5 revision)))
+       (date-relative (nth 3 revision))
+       (date-full (nth 4 revision)))
+  (message (format "%s [%s (%s)]" (propertize detail 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative))))
 
 (defun git-timemachine-abbreviate (revision)
  "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
