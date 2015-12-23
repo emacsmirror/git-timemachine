@@ -65,8 +65,17 @@ Available values are:
 (defvar-local git-timemachine-file nil)
 (defvar-local git-timemachine--revisions-cache nil)
 
-(defun git-timemachine--revisions ()
- "List git revisions of current buffers file."
+(defun git-timemachine-completing-read-fn (&rest args)
+  "Completion function, uses ido-completing-read if available."
+  (if (fboundp 'ido-completing-read)
+      (apply 'ido-completing-read args)
+    (apply 'completing-read args)
+    ))
+
+(defun git-timemachine--revisions (&optional git-branch)
+ "List git revisions of current buffers file.
+
+When passed a GIT-BRANCH, lists revisions from that branch."
  (if git-timemachine--revisions-cache
   git-timemachine--revisions-cache
   (setq git-timemachine--revisions-cache
@@ -74,8 +83,11 @@ Available values are:
     (message "Fetching Revisions...")
     (let ((default-directory git-timemachine-directory)
           (file git-timemachine-file))
-     (with-temp-buffer
-      (unless (zerop (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s" file))
+      (with-temp-buffer
+        (unless (zerop (if git-branch
+                           (process-file vc-git-program nil t nil "--no-pager" "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s" "--" file)
+                         (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s" "--" file)
+                           ))
        (error "Git log command exited with non-zero exit status for file: %s" file))
       (goto-char (point-min))
       (let ((lines)
@@ -99,6 +111,12 @@ Available values are:
  "Show last (current) revision of file."
  (interactive)
  (git-timemachine-show-revision (car (git-timemachine--revisions))))
+
+(defun git-timemachine-show-latest-revision-in-branch (git-branch)
+ "Show last (current) revision of file in GIT-BRANCH."
+ (interactive "MGit branch: ")
+ (git-timemachine-show-revision (car (git-timemachine--revisions git-branch))))
+
 
 (defun git-timemachine--next-revision (revisions)
  "Return the revision following the current revision in REVISIONS."
@@ -234,6 +252,33 @@ Call with the value of 'buffer-file-name."
    (goto-char (point-min))
    (forward-line (1- cur-line))
    (git-timemachine-mode))))
+
+;;;###autoload
+(defun git-timemachine-switch-branch (git-branch)
+ "Enable git timemachine for current buffer, switching to GIT-BRANCH."
+ (interactive
+  (list
+   (git-timemachine-completing-read-fn "Branch to switch to: "(vc-git-branches)))
+  )
+ (setq git-timemachine--revisions-cache nil)
+ (git-timemachine-validate (buffer-file-name))
+ (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
+       (file-name (buffer-file-name))
+       (timemachine-buffer (format "timemachine:%s" (buffer-name)))
+       (cur-line (line-number-at-pos))
+       (mode major-mode))
+  (with-current-buffer (get-buffer-create timemachine-buffer)
+   (switch-to-buffer timemachine-buffer)
+   (setq buffer-file-name file-name)
+   (funcall mode)
+   (setq git-timemachine-directory git-directory
+         git-timemachine-file (file-relative-name file-name git-directory)
+         git-timemachine-revision nil)
+   (git-timemachine-show-latest-revision-in-branch git-branch)
+   (goto-char (point-min))
+   (forward-line (1- cur-line))
+   (git-timemachine-mode))))
+
 
 (provide 'git-timemachine)
 
