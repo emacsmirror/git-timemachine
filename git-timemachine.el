@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.7
+;; Version: 2.8
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -66,7 +66,7 @@ Available values are:
 (defvar-local git-timemachine--revisions-cache nil)
 
 (defun git-timemachine-completing-read-fn (&rest args)
-  "Completion function, uses ido-completing-read if available."
+  "Apply ARGS to `ido-completing-read' if available and fall back to `completing-read'."
   (if (fboundp 'ido-completing-read)
       (apply 'ido-completing-read args)
     (apply 'completing-read args)
@@ -116,7 +116,6 @@ When passed a GIT-BRANCH, lists revisions from that branch."
  "Show last (current) revision of file in GIT-BRANCH."
  (interactive "MGit branch: ")
  (git-timemachine-show-revision (car (git-timemachine--revisions git-branch))))
-
 
 (defun git-timemachine--next-revision (revisions)
  "Return the revision following the current revision in REVISIONS."
@@ -222,6 +221,27 @@ Call with the value of 'buffer-file-name."
  (unless (vc-git-registered file)
   (error "This file is not git tracked")))
 
+(defun git-timemachine--start (get-revision-fn)
+ "Setup a timemachine buffer and populate it from the result of GET-REVISION-FN."
+ (setq git-timemachine--revisions-cache nil)
+ (git-timemachine-validate (buffer-file-name))
+ (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
+       (file-name (buffer-file-name))
+       (timemachine-buffer (format "timemachine:%s" (buffer-name)))
+       (cur-line (line-number-at-pos))
+       (mode major-mode))
+  (with-current-buffer (get-buffer-create timemachine-buffer)
+   (switch-to-buffer timemachine-buffer)
+   (setq buffer-file-name file-name)
+   (funcall mode)
+   (setq git-timemachine-directory git-directory
+         git-timemachine-file (file-relative-name file-name git-directory)
+    git-timemachine-revision nil)
+   (funcall get-revision-fn)
+   (goto-char (point-min))
+   (forward-line (1- cur-line))
+   (git-timemachine-mode))))
+
 ;;;###autoload
 (defun git-timemachine-toggle ()
  "Toggle git timemachine mode."
@@ -234,51 +254,13 @@ Call with the value of 'buffer-file-name."
 (defun git-timemachine ()
  "Enable git timemachine for file of current buffer."
  (interactive)
- (setq git-timemachine--revisions-cache nil)
- (git-timemachine-validate (buffer-file-name))
- (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
-       (file-name (buffer-file-name))
-       (timemachine-buffer (format "timemachine:%s" (buffer-name)))
-       (cur-line (line-number-at-pos))
-       (mode major-mode))
-  (with-current-buffer (get-buffer-create timemachine-buffer)
-   (switch-to-buffer timemachine-buffer)
-   (setq buffer-file-name file-name)
-   (funcall mode)
-   (setq git-timemachine-directory git-directory
-         git-timemachine-file (file-relative-name file-name git-directory)
-         git-timemachine-revision nil)
-   (git-timemachine-show-current-revision)
-   (goto-char (point-min))
-   (forward-line (1- cur-line))
-   (git-timemachine-mode))))
+ (git-timemachine--start #'git-timemachine-show-current-revision))
 
 ;;;###autoload
 (defun git-timemachine-switch-branch (git-branch)
  "Enable git timemachine for current buffer, switching to GIT-BRANCH."
- (interactive
-  (list
-   (git-timemachine-completing-read-fn "Branch to switch to: "(vc-git-branches)))
-  )
- (setq git-timemachine--revisions-cache nil)
- (git-timemachine-validate (buffer-file-name))
- (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
-       (file-name (buffer-file-name))
-       (timemachine-buffer (format "timemachine:%s" (buffer-name)))
-       (cur-line (line-number-at-pos))
-       (mode major-mode))
-  (with-current-buffer (get-buffer-create timemachine-buffer)
-   (switch-to-buffer timemachine-buffer)
-   (setq buffer-file-name file-name)
-   (funcall mode)
-   (setq git-timemachine-directory git-directory
-         git-timemachine-file (file-relative-name file-name git-directory)
-         git-timemachine-revision nil)
-   (git-timemachine-show-latest-revision-in-branch git-branch)
-   (goto-char (point-min))
-   (forward-line (1- cur-line))
-   (git-timemachine-mode))))
-
+ (interactive (list (git-timemachine-completing-read-fn "Branch to switch to: "(vc-git-branches))))
+ (git-timemachine--start (lambda () (git-timemachine-show-latest-revision-in-branch git-branch))))
 
 (provide 'git-timemachine)
 
