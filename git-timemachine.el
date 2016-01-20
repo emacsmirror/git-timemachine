@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.8
+;; Version: 2.9
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -119,7 +119,8 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 
 (defun git-timemachine--next-revision (revisions)
  "Return the revision following the current revision in REVISIONS."
- (cadr (cl-member (car git-timemachine-revision) revisions :key #'car :test #'string=)))
+ (or (cadr (cl-member (car git-timemachine-revision) revisions :key #'car :test #'string=))
+  (car (reverse revisions))))
 
 (defun git-timemachine-show-previous-revision ()
  "Show previous revision of file."
