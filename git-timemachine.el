@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.9
+;; Version: 3.0
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -51,6 +51,11 @@ will be shown in the minibuffer while navigating commits."
  "How to display the minibuffer detail"
  :group 'git-timemachine)
 
+(defface git-timemachine-minibuffer-author-face
+ '((t (:foreground "orange")))
+ "How to display the author in minibuffer"
+ :group 'git-timemachine)
+
 (defcustom git-timemachine-minibuffer-detail
  'subject
  "What to display when `git-timemachine-show-minibuffer-details` is t.
@@ -58,6 +63,12 @@ Available values are:
 `commit` : The SHA hash of the commit
 `subject`: The subject of the commit message"
  :type '(radio (const :tag "Commit SHA" commit) (const :tag "Commit Subject" subject))
+ :group 'git-timemachine)
+
+(defcustom git-timemachine-show-author
+ t
+ "Prepend author to minibuffer details."
+ :type 'boolean
  :group 'git-timemachine)
 
 (defvar-local git-timemachine-directory nil)
@@ -83,25 +94,27 @@ When passed a GIT-BRANCH, lists revisions from that branch."
     (message "Fetching Revisions...")
     (let ((default-directory git-timemachine-directory)
           (file git-timemachine-file))
-      (with-temp-buffer
-        (unless (zerop (if git-branch
-                           (process-file vc-git-program nil t nil "--no-pager" "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s" "--" file)
-                         (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s" "--" file)
-                           ))
+     (with-temp-buffer
+
+      (unless (zerop (if git-branch
+                      (process-file vc-git-program nil t nil "--no-pager" "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)
+                      (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)))
        (error "Git log command exited with non-zero exit status for file: %s" file))
+
       (goto-char (point-min))
       (let ((lines)
             (commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
        (while (not (eobp))
         (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-         (string-match "\\([^\0]*\\)\0\\([^\0]*\\)\0\\([^\0]*\\)\0\\(.*\\)" line)
+         (string-match "\\([^\0]*\\)\0\\([^\0]*\\)\0\\([^\0]*\\)\0\\(.*\\)\0\\(.*\\)" line)
          (let ((commit (match-string 1 line))
                (date-relative (match-string 2 line))
                (date-full (match-string 3 line))
-               (subject (match-string 4 line)))
+               (subject (match-string 4 line))
+               (author (match-string 5 line)))
           (forward-line 1)
           (let ((file-name (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-           (push (list commit file-name commit-number date-relative date-full subject) lines))))
+           (push (list commit file-name commit-number date-relative date-full subject author) lines))))
         (setq commit-number (1- commit-number))
         (forward-line 2))
        (nreverse lines))))
@@ -170,13 +183,13 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 
 (defun git-timemachine--show-minibuffer-details (revision)
  "Show details for REVISION in minibuffer."
- (let ((detail
-        (if (eq git-timemachine-minibuffer-detail 'commit)
-         (car revision)
-         (nth 5 revision)))
-       (date-relative (nth 3 revision))
-       (date-full (nth 4 revision)))
-  (message (format "%s [%s (%s)]" (propertize detail 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative))))
+ (let* ((date-relative (nth 3 revision))
+        (date-full (nth 4 revision))
+        (author (if git-timemachine-show-author (concat (nth 6 revision) ": ") ""))
+        (sha-or-subject (if (eq git-timemachine-minibuffer-detail 'commit) (car revision) (nth 5 revision))))
+  (message "%s%s [%s (%s)]"
+   (propertize author 'face 'git-timemachine-minibuffer-author-face)
+   (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
 
 (defun git-timemachine-abbreviate (revision)
  "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
