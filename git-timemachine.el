@@ -193,6 +193,36 @@ When passed a GIT-BRANCH, lists revisions from that branch."
    (propertize author 'face 'git-timemachine-minibuffer-author-face)
    (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
 
+(defun git-timemachine--find-new-current-line (curr-revision new-revision current-line)
+  "Return the new current line after a revision jump"
+  (let* ((revisions (reverse (git-timemachine--revisions)))
+	 (current-commit (car curr-revision))
+	 (curr-rev-number (+ (cl-position curr-revision revisions) 1))
+	 (new-commit (car new-revision))
+	 (new-rev-number (+ (cl-position new-revision revisions) 1))
+	 (new-line nil)
+	 (file git-timemachine-file)
+	 (reverse (< curr-rev-number new-rev-number)))
+    ;; Get new current line number using `git-blame`
+    (with-temp-buffer
+      (if reverse
+	  (process-file vc-git-program nil t nil "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+	(process-file vc-git-program nil t nil "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit)))
+      (goto-char (point-min))
+      ;; If end-of-buffer problem
+      (when (search-forward-regexp "^fatal: file .+ has only .+ lines" nil t)
+	(setq current-line (- current-line 1))
+	(erase-buffer)
+	(if reverse
+	    (process-file vc-git-program nil t nil "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+	  (process-file vc-git-program nil t nil "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit))))
+      (goto-char (point-min))
+      (search-forward-regexp "^[^ ]+ \\([^ ]+\\)")
+      (setq new-line (string-to-number (match-string 1)))
+      ;; In case git blame doesn't give what we expect
+      (when (= new-line 0) (setq new-line current-line))
+      new-line)))
+
 (defun git-timemachine-abbreviate (revision)
  "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
  (substring revision 0 git-timemachine-abbreviation-length))
