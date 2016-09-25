@@ -139,21 +139,36 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 (defun git-timemachine-show-previous-revision ()
  "Show previous revision of file."
  (interactive)
- (git-timemachine-show-revision (git-timemachine--next-revision (git-timemachine--revisions))))
+ (let ((new-line nil)
+       (curr-revision git-timemachine-revision)
+       (new-revision (git-timemachine--next-revision (git-timemachine--revisions))))
+   (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+   (git-timemachine-show-revision new-revision)
+   (forward-line (- new-line (line-number-at-pos)))))
 
 (defun git-timemachine-show-next-revision ()
  "Show next revision of file."
  (interactive)
- (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
+ (let ((new-line nil)
+       (curr-revision git-timemachine-revision)
+       (new-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
+   (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+   (git-timemachine-show-revision new-revision)
+   (forward-line (- new-line (line-number-at-pos)))))
 
 (defun git-timemachine-show-nth-revision (rev-number)
  "Show the REV-NUMBER revision."
  (interactive "nEnter revision number: ")
  (let* ((revisions (reverse (git-timemachine--revisions)))
-        (revision (nth (1- rev-number) revisions))
-        (num-revisions (length revisions)))
-  (if revision (git-timemachine-show-revision revision)
-   (message "Only %d revisions exist." num-revisions))))
+	(num-revisions (length revisions))
+	(curr-revision git-timemachine-revision)
+	(new-revision (nth (1- rev-number) revisions))
+	(new-line nil))
+   (if (not new-revision)
+       (message "Only %d revisions exist." num-revisions)
+     (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+     (git-timemachine-show-revision new-revision)
+     (forward-line (- new-line (line-number-at-pos))))))
 
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
