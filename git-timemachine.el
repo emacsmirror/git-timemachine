@@ -139,21 +139,36 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 (defun git-timemachine-show-previous-revision ()
  "Show previous revision of file."
  (interactive)
- (git-timemachine-show-revision (git-timemachine--next-revision (git-timemachine--revisions))))
+ (let ((new-line nil)
+       (curr-revision git-timemachine-revision)
+       (new-revision (git-timemachine--next-revision (git-timemachine--revisions))))
+   (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+   (git-timemachine-show-revision new-revision)
+   (forward-line (- new-line (line-number-at-pos)))))
 
 (defun git-timemachine-show-next-revision ()
  "Show next revision of file."
  (interactive)
- (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
+ (let ((new-line nil)
+       (curr-revision git-timemachine-revision)
+       (new-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
+   (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+   (git-timemachine-show-revision new-revision)
+   (forward-line (- new-line (line-number-at-pos)))))
 
 (defun git-timemachine-show-nth-revision (rev-number)
  "Show the REV-NUMBER revision."
  (interactive "nEnter revision number: ")
  (let* ((revisions (reverse (git-timemachine--revisions)))
-        (revision (nth (1- rev-number) revisions))
-        (num-revisions (length revisions)))
-  (if revision (git-timemachine-show-revision revision)
-   (message "Only %d revisions exist." num-revisions))))
+	(num-revisions (length revisions))
+	(curr-revision git-timemachine-revision)
+	(new-revision (nth (1- rev-number) revisions))
+	(new-line nil))
+   (if (not new-revision)
+       (message "Only %d revisions exist." num-revisions)
+     (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+     (git-timemachine-show-revision new-revision)
+     (forward-line (- new-line (line-number-at-pos))))))
 
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
@@ -192,6 +207,36 @@ When passed a GIT-BRANCH, lists revisions from that branch."
   (message "%s%s [%s (%s)]"
    (propertize author 'face 'git-timemachine-minibuffer-author-face)
    (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
+
+(defun git-timemachine--find-new-current-line (curr-revision new-revision current-line)
+  "Return the new current line after a revision jump"
+  (let* ((revisions (reverse (git-timemachine--revisions)))
+	 (current-commit (car curr-revision))
+	 (curr-rev-number (+ (cl-position curr-revision revisions) 1))
+	 (new-commit (car new-revision))
+	 (new-rev-number (+ (cl-position new-revision revisions) 1))
+	 (new-line nil)
+	 (file git-timemachine-file)
+	 (reverse (< curr-rev-number new-rev-number)))
+    ;; Get new current line number using `git-blame`
+    (with-temp-buffer
+      (if reverse
+	  (process-file vc-git-program nil t nil "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+	(process-file vc-git-program nil t nil "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit)))
+      (goto-char (point-min))
+      ;; If end-of-buffer problem
+      (when (search-forward-regexp "^fatal: file .+ has only .+ lines" nil t)
+	(setq current-line (- current-line 1))
+	(erase-buffer)
+	(if reverse
+	    (process-file vc-git-program nil t nil "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+	  (process-file vc-git-program nil t nil "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit))))
+      (goto-char (point-min))
+      (search-forward-regexp "^[^ ]+ \\([^ ]+\\)")
+      (setq new-line (string-to-number (match-string 1)))
+      ;; In case git blame doesn't give what we expect
+      (when (= new-line 0) (setq new-line current-line))
+      new-line)))
 
 (defun git-timemachine-abbreviate (revision)
  "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
