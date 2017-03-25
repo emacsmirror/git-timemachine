@@ -25,6 +25,7 @@ Use the following keys to navigate historic version of the file
  - `W` Copy the full hash of the current historic version
  - `g` Goto nth revision
  - `q` Exit the time machine.
+ - `b` Run `magit-blame` on the currently visited revision (if magit available).
 
 ## Customize
 
