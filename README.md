@@ -36,3 +36,9 @@ Set `git-timemachine-show-minibuffer-details` (default t) to control
 whether details of the commit are shown in the minibuffer.
 
 Also `M-x customize [git-timemachine]`.
+
+## FAQ
+
+### How do I "rollback" to the currently visited revision?
+
+Just use your normal `write-file` and supply the file name of your choice. Be aware that you might be throwing away local uncommitted changes to the file in question. If you don't want to use you muscle memory to write the file you can map `write-file` to something short and sweet in `git-timemachine-mode-map`.
