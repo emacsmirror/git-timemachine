@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.3
+;; Version: 4.4
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 ;; Package-Requires: ((emacs "24.3"))
@@ -78,17 +78,26 @@ Available values are:
  :type 'boolean
  :group 'git-timemachine)
 
+(defcustom git-timemachine-global-git-arguments
+ '("-c" "log.showSignature=false" "--no-pager")
+ "Common arguments for all git commands."
+ :type 'list
+ :group 'git-timemachine)
+
 (defvar-local git-timemachine-directory nil)
 (defvar-local git-timemachine-revision nil)
 (defvar-local git-timemachine-file nil)
 (defvar-local git-timemachine--revisions-cache nil)
 
 (defun git-timemachine-completing-read-fn (&rest args)
-  "Apply ARGS to `ido-completing-read' if available and fall back to `completing-read'."
-  (if (fboundp 'ido-completing-read)
-      (apply 'ido-completing-read args)
-    (apply 'completing-read args)
-    ))
+ "Apply ARGS to `ido-completing-read' if available and fall back to `completing-read'."
+ (if (fboundp 'ido-completing-read)
+  (apply 'ido-completing-read args)
+  (apply 'completing-read args)))
+
+(defun git-timemachine--process-file (&rest args)
+ "Run ‘process-file’ with ARGS and ‘git-timemachine-global-git-arguments’ applied."
+ (apply #'process-file vc-git-program nil t nil (append git-timemachine-global-git-arguments args)))
 
 (defun git-timemachine--revisions (&optional git-branch)
  "List git revisions of current buffers file.
@@ -104,8 +113,8 @@ When passed a GIT-BRANCH, lists revisions from that branch."
      (with-temp-buffer
 
       (unless (zerop (if git-branch
-                      (process-file vc-git-program nil t nil "--no-pager" "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)
-                      (process-file vc-git-program nil t nil "--no-pager" "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)))
+                      (git-timemachine--process-file "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)
+                      (git-timemachine--process-file "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)))
        (error "Git log command exited with non-zero exit status for file: %s" file))
 
       (goto-char (point-min))
@@ -196,8 +205,7 @@ When passed a GIT-BRANCH, lists revisions from that branch."
    (erase-buffer)
    (let ((default-directory git-timemachine-directory)
          (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
-    (process-file vc-git-program nil t nil "--no-pager" "show"
-     (concat commit ":" revision-file-name)))
+    (git-timemachine--process-file "show" (concat commit ":" revision-file-name)))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
@@ -221,7 +229,7 @@ When passed a GIT-BRANCH, lists revisions from that branch."
    (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
 
 (defun git-timemachine--find-new-current-line (curr-revision new-revision current-line)
-  "Return the new current line after a revision jump"
+  "Return the new current line after a revision jump."
   (let* ((revisions (reverse (git-timemachine--revisions)))
 	 (current-commit (car curr-revision))
 	 (curr-rev-number (+ (or (cl-position curr-revision revisions) 0) 1))
@@ -236,16 +244,16 @@ When passed a GIT-BRANCH, lists revisions from that branch."
       ;; Get new current line number using `git-blame`
       (with-temp-buffer
 	(if reverse
-	    (process-file vc-git-program nil t nil "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
-	  (process-file vc-git-program nil t nil "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit)))
+	    (git-timemachine--process-file "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+	  (git-timemachine--process-file "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit)))
 	(goto-char (point-min))
 	;; If end-of-buffer problem
 	(when (search-forward-regexp "^fatal: file .+ has only .+ lines" nil t)
 	  (setq current-line (- current-line 1))
 	  (erase-buffer)
 	  (if reverse
-	      (process-file vc-git-program nil t nil "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
-	    (process-file vc-git-program nil t nil "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit))))
+	      (git-timemachine--process-file "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+	    (git-timemachine--process-file "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit))))
 	(goto-char (point-min))
 	(search-forward-regexp "^[^ ]+ \\([^ ]+\\)")
 	(setq new-line (string-to-number (match-string 1)))
