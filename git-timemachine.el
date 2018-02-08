@@ -35,11 +35,13 @@
 
 (defcustom git-timemachine-abbreviation-length 12
  "Number of chars from the full sha1 hash to use for abbreviation."
+ :type 'integer
  :group 'git-timemachine)
 
 (defcustom git-timemachine-show-minibuffer-details t
  "Non-nil means that details of the commit (its hash and date)
 will be shown in the minibuffer while navigating commits."
+ :type 'boolean
  :group 'git-timemachine)
 
 (defface git-timemachine-commit
