@@ -24,6 +24,7 @@ Use the following keys to navigate historic version of the file
  - `w` Copy the abbreviated hash of the current historic version
  - `W` Copy the full hash of the current historic version
  - `g` Goto nth revision
+ - `t` Goto revision by selected commit message
  - `q` Exit the time machine.
  - `b` Run `magit-blame` on the currently visited revision (if magit available).
 

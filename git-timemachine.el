@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.4
+;; Version: 4.5
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 ;; Package-Requires: ((emacs "24.3"))
@@ -93,9 +93,10 @@ Available values are:
 
 (defun git-timemachine-completing-read-fn (&rest args)
  "Apply ARGS to `ido-completing-read' if available and fall back to `completing-read'."
- (if (fboundp 'ido-completing-read)
-  (apply 'ido-completing-read args)
-  (apply 'completing-read args)))
+ (cond
+  ((fboundp 'ivy-read) (apply 'ivy-read args))
+  ((fboundp 'ido-completing-read) (apply 'ido-completing-read args))
+  (t (apply 'completing-read args))))
 
 (defun git-timemachine--process-file (&rest args)
  "Run ‘process-file’ with ARGS and ‘git-timemachine-global-git-arguments’ applied."
@@ -172,10 +173,22 @@ When passed a GIT-BRANCH, lists revisions from that branch."
        (curr-revision git-timemachine-revision)
        (new-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions))))
        (cursor-win-pos (git-timemachine--get-cursor-position)))
-   (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
-   (git-timemachine-show-revision new-revision)
-   (forward-line (- new-line (line-number-at-pos)))
-   (git-timemachine--set-cursor-position cursor-win-pos)))
+  (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
+  (git-timemachine-show-revision new-revision)
+  (forward-line (- new-line (line-number-at-pos)))
+  (git-timemachine--set-cursor-position cursor-win-pos)))
+
+(defun git-timemachine-show-revision-fuzzy ()
+ "Show the revision with the chosen commit message."
+  (interactive)
+ (let* ((revisions (git-timemachine--revisions))
+        (wanted
+         (funcall #'git-timemachine-completing-read-fn "Commit message: "
+          (mapcar (apply-partially #'nth 5) revisions))))
+  (git-timemachine-show-revision
+   (cl-find wanted revisions
+    :key (apply-partially #'nth 5)
+    :test #'equal))))
 
 (defun git-timemachine-show-nth-revision (rev-number)
  "Show the REV-NUMBER revision."
@@ -313,6 +326,7 @@ respect to the window first line"
  '(("p" . git-timemachine-show-previous-revision)
    ("n" . git-timemachine-show-next-revision)
    ("g" . git-timemachine-show-nth-revision)
+   ("t" . git-timemachine-show-revision-fuzzy)
    ("q" . git-timemachine-quit)
    ("w" . git-timemachine-kill-abbreviated-revision)
    ("W" . git-timemachine-kill-revision)
