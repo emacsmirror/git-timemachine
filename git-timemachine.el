@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.6
+;; Version: 4.7
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 ;; Package-Requires: ((emacs "24.3"))
@@ -319,6 +319,16 @@ respect to the window first line"
   (message revision)
   (kill-new revision)))
 
+(defun git-timemachine-show-commit ()
+ "Show commit for current revision."
+ (interactive)
+ (let ((rev (car git-timemachine-revision)))
+  (if (fboundp 'magit-revision-mode)
+   (progn
+    (with-temp-buffer
+     (save-excursion (magit-mode-setup #'magit-revision-mode rev nil nil nil))))
+   (message "You need to install magit to show commit"))))
+
 (define-minor-mode git-timemachine-mode
  "Git Timemachine, feel the wings of history."
  :init-value nil
@@ -331,7 +341,8 @@ respect to the window first line"
    ("q" . git-timemachine-quit)
    ("w" . git-timemachine-kill-abbreviated-revision)
    ("W" . git-timemachine-kill-revision)
-   ("b" . git-timemachine-blame))
+   ("b" . git-timemachine-blame)
+   ("c" . git-timemachine-show-commit))
  :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)
