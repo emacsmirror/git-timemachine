@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 4.8
-;; URL: https://github.com/pidu/git-timemachine
+;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: git
 ;; Package-Requires: ((emacs "24.3"))
 
