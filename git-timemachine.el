@@ -3,10 +3,10 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.9
+;; Version: 4.10
 ;; URL: https://gitlab.com/pidu/git-timemachine
-;; Keywords: git
-;; Package-Requires: ((emacs "24.3"))
+;; Keywords: vc
+;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
 
 ;; This file is not part of GNU Emacs
 
@@ -32,6 +32,7 @@
 
 (require 'vc-git)
 (require 'cl-lib)
+(require 'transient)
 
 (defcustom git-timemachine-abbreviation-length 12
  "Number of chars from the full sha1 hash to use for abbreviation."
@@ -256,7 +257,9 @@ When passed a GIT-BRANCH, lists revisions from that branch."
    (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
 
 (defun git-timemachine--find-new-current-line (curr-revision new-revision current-line)
-  "Return the new current line after a revision jump."
+  "Return the new current line after a revision jump.
+
+Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LINE."
   (let* ((revisions (reverse (git-timemachine--revisions)))
 	 (current-commit (car curr-revision))
 	 (curr-rev-number (+ (or (cl-position curr-revision revisions) 0) 1))
@@ -289,15 +292,13 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 	new-line))))
 
 (defun git-timemachine--get-cursor-position ()
-  "Return the cursor visual line number with respect to the
-current window first line"
+  "Return the cursor visual line number with respect to the current window first line."
   (let* ((win-point-min (save-excursion (move-to-window-line 0) (point)))
 	 (cur-pos (count-screen-lines win-point-min (point))))
     cur-pos))
 
 (defun git-timemachine--set-cursor-position (POS)
-  "Set the cursor position to the POS visual line with
-respect to the window first line"
+  "Set the cursor position to the POS visual line with respect to the window first line."
   (recenter POS))
 
 (defun git-timemachine-abbreviate (revision)
@@ -314,7 +315,7 @@ respect to the window first line"
     (switch-to-buffer parent-buffer nil t)))))
 
 (defun git-timemachine-blame ()
- "Call magit-blame on current revision."
+ "Call ‘magit-blame’ on current revision."
  (interactive)
  (if (fboundp 'magit-blame)
   (let ((magit-buffer-revision (car git-timemachine-revision)))
@@ -345,6 +346,22 @@ respect to the window first line"
      (save-excursion (magit-mode-setup #'magit-revision-mode rev nil nil nil))))
    (message "You need to install magit to show commit"))))
 
+(define-transient-command git-timemachine-help ()
+ "Show online help."
+ ["Navigate"
+  [("p" "show previous revision" git-timemachine-show-previous-revision)
+   ("n" "show next revision" git-timemachine-show-next-revision)
+   ("g" "show nth revision" git-timemachine-show-nth-revision)
+   ("t" "show fuzzy revision" git-timemachine-show-revision-fuzzy)]]
+ ["Kill current revision"
+  [("w" "kill abbreviated revision" git-timemachine-kill-abbreviated-revision)
+   ("W" "kill revision" git-timemachine-kill-revision)]]
+ ["Misc"
+  [("b" "blame current revision" git-timemachine-blame)
+   ("c" "show commit" git-timemachine-show-commit)
+   ("?" "show help" git-timemachine-help)
+   ("q" "quit" git-timemachine-quit)]])
+
 (define-minor-mode git-timemachine-mode
  "Git Timemachine, feel the wings of history."
  :init-value nil
@@ -358,7 +375,8 @@ respect to the window first line"
    ("w" . git-timemachine-kill-abbreviated-revision)
    ("W" . git-timemachine-kill-revision)
    ("b" . git-timemachine-blame)
-   ("c" . git-timemachine-show-commit))
+   ("c" . git-timemachine-show-commit)
+   ("?" . git-timemachine-help))
  :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)
