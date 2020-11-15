@@ -241,6 +241,8 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 	(git-timemachine--show-minibuffer-details revision))
       (git-timemachine--erm-workaround))))
 
+(declare-function erm-reset-buffer "ext:enh-ruby-mode")
+
 (defun git-timemachine--erm-workaround ()
   "Workaround for enhanced ruby mode not detecting revision change."
   (when (eq major-mode 'enh-ruby-mode)
