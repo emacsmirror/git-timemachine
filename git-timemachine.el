@@ -346,7 +346,7 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
 	(magit-show-commit rev)
       (message "You need to install magit to show commit"))))
 
-(define-transient-command git-timemachine-help ()
+(transient-define-prefix git-timemachine-help ()
   "Show online help."
   ["Navigate"
    [("p" "show previous revision" git-timemachine-show-previous-revision)
