@@ -98,13 +98,6 @@ Available values are:
 (defvar-local git-timemachine-file nil)
 (defvar-local git-timemachine--revisions-cache nil)
 
-(defun git-timemachine-completing-read-fn (&rest args)
-  "Apply ARGS to `ido-completing-read' if available and fall back to `completing-read'."
-  (cond
-   ((fboundp 'ivy-read) (apply 'ivy-read args))
-   ((fboundp 'ido-completing-read) (apply 'ido-completing-read args))
-   (t (apply 'completing-read args))))
-
 (defun git-timemachine--process-file (&rest args)
   "Run ‘process-file’ with ARGS and ‘git-timemachine-global-git-arguments’ applied."
   (apply #'process-file vc-git-program nil t nil (append git-timemachine-global-git-arguments args)))
@@ -190,7 +183,7 @@ When passed a GIT-BRANCH, lists revisions from that branch."
   (interactive)
   (let* ((revisions (git-timemachine--revisions))
 	 (wanted
-	  (funcall #'git-timemachine-completing-read-fn "Commit message: "
+	  (funcall #'completing-read "Commit message: "
 		   (mapcar (apply-partially #'nth 5) revisions))))
     (git-timemachine-show-revision
      (cl-find wanted revisions
@@ -431,7 +424,7 @@ Call with the value of 'buffer-file-name."
 ;;;###autoload
 (defun git-timemachine-switch-branch (git-branch)
   "Enable git timemachine for current buffer, switching to GIT-BRANCH."
-  (interactive (list (git-timemachine-completing-read-fn "Branch to switch to: "(vc-git-branches))))
+  (interactive (list (completing-read "Branch to switch to: "(vc-git-branches))))
   (git-timemachine--start (lambda () (git-timemachine-show-latest-revision-in-branch git-branch))))
 
 (provide 'git-timemachine)
