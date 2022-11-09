@@ -34,6 +34,11 @@
 (require 'cl-lib)
 (require 'transient)
 
+(defgroup git-timemachine nil
+  "Walk through git revisions of a file."
+  :link '(url-link "https://codeberg.org/pidu/git-timemachine")
+  :group 'tools)
+
 (defcustom git-timemachine-abbreviation-length 12
   "Number of chars from the full sha1 hash to use for abbreviation."
   :type 'integer
