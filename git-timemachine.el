@@ -52,7 +52,7 @@ will be shown in the minibuffer while navigating commits."
 
 (defface git-timemachine-commit
   '((default :weight bold))
-  "Face for git timemachine commit sha"
+  "Face for git timemachine commit sha."
   :group 'git-timemachine)
 
 (defface git-timemachine-minibuffer-detail-face
@@ -60,7 +60,7 @@ will be shown in the minibuffer while navigating commits."
       :foreground "yellow")
      (((class color) (background light))
        :foreground "yellow4"))
-  "How to display the minibuffer detail"
+  "How to display the minibuffer detail."
   :group 'git-timemachine)
 
 (defface git-timemachine-minibuffer-author-face
@@ -68,7 +68,7 @@ will be shown in the minibuffer while navigating commits."
       :foreground "orange")
      (((class color) (background light))
        :foreground "DarkOrange4"))
-  "How to display the author in minibuffer"
+  "How to display the author in minibuffer."
   :group 'git-timemachine)
 
 (defcustom git-timemachine-minibuffer-detail
