@@ -94,7 +94,7 @@ Available values are:
 
 (defcustom git-timemachine-quit-to-invoking-buffer
   t
-  "Switch to invoking buffer on ‘git-timemachine-quit’."
+  "Switch to invoking buffer on `git-timemachine-quit`."
   :type 'boolean
   :group 'git-timemachine)
 
@@ -104,7 +104,7 @@ Available values are:
 (defvar-local git-timemachine--revisions-cache nil)
 
 (defun git-timemachine--process-file (&rest args)
-  "Run ‘process-file’ with ARGS and ‘git-timemachine-global-git-arguments’ applied."
+  "Run `process-file` with ARGS and `git-timemachine-global-git-arguments` applied."
   (apply #'process-file vc-git-program nil t nil (append git-timemachine-global-git-arguments args)))
 
 (defun git-timemachine--revisions (&optional git-branch)
@@ -259,7 +259,8 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 (defun git-timemachine--find-new-current-line (curr-revision new-revision current-line)
   "Return the new current line after a revision jump.
 
-Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LINE."
+Given CURR-REVISION and NEW-REVISION determine if we need to
+updated CURRENT-LINE."
   (let* ((revisions (reverse (git-timemachine--revisions)))
           (current-commit (car curr-revision))
           (curr-rev-number (+ (or (cl-position curr-revision revisions) 0) 1))
@@ -292,14 +293,14 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
         new-line))))
 
 (defun git-timemachine--get-cursor-position ()
-  "Return the cursor visual line number with respect to the current window first line."
-  (let* ((win-point-min (save-excursion (move-to-window-line 0) (point)))
-          (cur-pos (count-screen-lines win-point-min (point))))
-    cur-pos))
+ "Return the cursor visual line number with respect to the current window first line."
+ (let* ((win-point-min (save-excursion (move-to-window-line 0) (point)))
+        (cur-pos (count-screen-lines win-point-min (point))))
+  cur-pos))
 
 (defun git-timemachine--set-cursor-position (POS)
-  "Set the cursor position to the POS visual line with respect to the window first line."
-  (recenter POS))
+ "Set the cursor position to the POS visual line with respect to the window first line."
+ (recenter POS))
 
 (defun git-timemachine-abbreviate (revision)
   "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
@@ -315,7 +316,7 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
         (switch-to-buffer parent-buffer nil t)))))
 
 (defun git-timemachine-blame ()
-  "Call ‘magit-blame’ on current revision."
+  "Call `magit-blame` on current revision."
   (interactive)
   (if (fboundp 'magit-blame)
     (let ((magit-buffer-revision (car git-timemachine-revision)))
