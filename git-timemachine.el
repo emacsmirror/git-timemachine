@@ -324,14 +324,14 @@ updated CURRENT-LINE."
     (message "You need to install magit for blame capabilities")))
 
 (defun git-timemachine-kill-revision ()
-  "Kill the current revisions abbreviated commit hash."
+  "Kill the current revision's full commit hash."
   (interactive)
   (let ((revision (car git-timemachine-revision)))
     (message revision)
     (kill-new revision)))
 
 (defun git-timemachine-kill-abbreviated-revision ()
-  "Kill the current revisions full commit hash."
+  "Kill the current revision's abbreviated commit hash."
   (interactive)
   (let ((revision (git-timemachine-abbreviate (car git-timemachine-revision))))
     (message revision)
