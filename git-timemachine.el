@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.13
+;; Version: 4.14
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -221,6 +221,7 @@ When passed a GIT-BRANCH, lists revisions from that branch."
            (date-relative (nth 3 revision))
            (date-full (nth 4 revision))
            (subject (nth 5 revision)))
+      (when magit-blame-mode (magit-blame-quit))
       (setq buffer-read-only nil)
       (erase-buffer)
       (let ((default-directory git-timemachine-directory)
