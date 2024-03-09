@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.14
+;; Version: 4.15
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -212,33 +212,33 @@ When passed a GIT-BRANCH, lists revisions from that branch."
       (git-timemachine--set-cursor-position cursor-win-pos))))
 
 (defun git-timemachine-show-revision (revision)
-  "Show a REVISION (commit hash) of the current file."
-  (when revision
-    (let ((current-position (point))
-           (commit (car revision))
-           (revision-file-name (nth 1 revision))
-           (commit-index (nth 2 revision))
-           (date-relative (nth 3 revision))
-           (date-full (nth 4 revision))
-           (subject (nth 5 revision)))
-      (when magit-blame-mode (magit-blame-quit))
-      (setq buffer-read-only nil)
-      (erase-buffer)
-      (let ((default-directory git-timemachine-directory)
-             (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
-        (git-timemachine--process-file "show" (concat commit ":" revision-file-name)))
-      (setq buffer-read-only t)
-      (set-buffer-modified-p nil)
-      (let* ((revisions (git-timemachine--revisions))
-              (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
-        (setq mode-line-buffer-identification
-          (list (propertized-buffer-identification "%12b") "@"
-            (propertize (git-timemachine-abbreviate commit) 'face 'git-timemachine-commit) " name:" revision-file-name" " n-of-m)))
-      (setq git-timemachine-revision revision)
-      (goto-char current-position)
-      (when git-timemachine-show-minibuffer-details
-        (git-timemachine--show-minibuffer-details revision))
-      (git-timemachine--erm-workaround))))
+ "Show a REVISION (commit hash) of the current file."
+ (when revision
+  (let ((current-position (point))
+        (commit (car revision))
+        (revision-file-name (nth 1 revision))
+        (commit-index (nth 2 revision))
+        (date-relative (nth 3 revision))
+        (date-full (nth 4 revision))
+        (subject (nth 5 revision)))
+   (when (bound-and-true-p magit-blame-mode) (magit-blame-quit))
+   (setq buffer-read-only nil)
+   (erase-buffer)
+   (let ((default-directory git-timemachine-directory)
+         (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
+    (git-timemachine--process-file "show" (concat commit ":" revision-file-name)))
+   (setq buffer-read-only t)
+   (set-buffer-modified-p nil)
+   (let* ((revisions (git-timemachine--revisions))
+          (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
+    (setq mode-line-buffer-identification
+     (list (propertized-buffer-identification "%12b") "@"
+      (propertize (git-timemachine-abbreviate commit) 'face 'git-timemachine-commit) " name:" revision-file-name" " n-of-m)))
+   (setq git-timemachine-revision revision)
+   (goto-char current-position)
+   (when git-timemachine-show-minibuffer-details
+    (git-timemachine--show-minibuffer-details revision))
+   (git-timemachine--erm-workaround))))
 
 (declare-function erm-reset-buffer "ext:enh-ruby-mode")
 
