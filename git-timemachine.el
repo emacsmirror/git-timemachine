@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.15
+;; Version: 4.16
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -212,58 +212,51 @@ When passed a GIT-BRANCH, lists revisions from that branch."
       (git-timemachine--set-cursor-position cursor-win-pos))))
 
 (defun git-timemachine-show-nearest-revision (&optional relative-hash)
-  "Show last revision of the current file nearest to RELATIVE-HASH."
-  (interactive "sEnter commit hash: ")
-  (let* ((abs-file-name (buffer-file-name (current-buffer)))
-         (root-directory
-          (expand-file-name
-           (vc-call-backend
-            (vc-responsible-backend abs-file-name)
-            'root abs-file-name)))
-         (default-directory root-directory)
-         (file-name (string-remove-prefix root-directory abs-file-name))
-         (line
-          (with-temp-buffer
-            (process-file
-             vc-git-program
-             nil
-             t
-             nil
-             "log"
-             "--max-count"  ; -n
-             "1"
-             relative-hash
-             "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file-name)
-            (buffer-substring-no-properties (point-min) (point-max))))
-         (line-list (string-split line " "))
-         (hash (nth 0 line-list))
-         (date-relative (nth 1 line-list))
-         (date-full  (nth 2 line-list))
-         (subject    (nth 3 line-list))
-         (author     (nth 4 line-list))
-         (revision (list hash file-name -1 date-relative date-full subject author)))
-    (git-timemachine-show-revision revision)))
+ "Show last revision of the current file nearest to RELATIVE-HASH."
+ (interactive "sEnter commit hash: ")
+ (let* ((abs-file-name (buffer-file-name (current-buffer)))
+        (root-directory
+         (expand-file-name
+          (vc-call-backend
+           (vc-responsible-backend abs-file-name)
+           'root abs-file-name)))
+        (default-directory root-directory)
+        (file-name (string-remove-prefix root-directory abs-file-name))
+	(line
+	 (with-temp-buffer
+	  (process-file vc-git-program nil t nil "log" "--max-count" "1" relative-hash "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file-name)
+	  (buffer-substring-no-properties (point-min) (point-max))))
+	(line-list (unless (string-prefix-p "fatal" line t) (string-split line "\0")))
+	(hash (nth 0 line-list))
+	(date-relative (nth 1 line-list))
+	(date-full  (nth 2 line-list))
+	(subject (nth 3 line-list))
+	(author (nth 4 line-list))
+	(revision (list hash file-name -1 date-relative date-full subject author)))
+  (if line-list
+   (git-timemachine-show-revision revision)
+   (message "No such commit %s" relative-hash))))
 
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
  (when revision
   (let ((current-position (point))
-        (commit (car revision))
-        (revision-file-name (nth 1 revision))
-        (commit-index (nth 2 revision))
-        (date-relative (nth 3 revision))
-        (date-full (nth 4 revision))
-        (subject (nth 5 revision)))
+	(commit (car revision))
+	(revision-file-name (nth 1 revision))
+	(commit-index (nth 2 revision))
+	(date-relative (nth 3 revision))
+	(date-full (nth 4 revision))
+	(subject (nth 5 revision)))
    (when (bound-and-true-p magit-blame-mode) (magit-blame-quit))
    (setq buffer-read-only nil)
    (erase-buffer)
    (let ((default-directory git-timemachine-directory)
-         (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
+	 (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
     (git-timemachine--process-file "show" (concat commit ":" revision-file-name)))
    (setq buffer-read-only t)
    (set-buffer-modified-p nil)
    (let* ((revisions (git-timemachine--revisions))
-          (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
+	  (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
     (setq mode-line-buffer-identification
      (list (propertized-buffer-identification "%12b") "@"
       (propertize (git-timemachine-abbreviate commit) 'face 'git-timemachine-commit) " name:" revision-file-name" " n-of-m)))
