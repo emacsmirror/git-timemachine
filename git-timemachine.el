@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.15
+;; Version: 4.16
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -211,6 +211,32 @@ When passed a GIT-BRANCH, lists revisions from that branch."
       (forward-line (- new-line (line-number-at-pos)))
       (git-timemachine--set-cursor-position cursor-win-pos))))
 
+(defun git-timemachine-show-nearest-revision (&optional relative-hash)
+ "Show last revision of the current file nearest to RELATIVE-HASH."
+ (interactive "sEnter commit hash: ")
+ (let* ((abs-file-name (buffer-file-name (current-buffer)))
+        (root-directory
+         (expand-file-name
+          (vc-call-backend
+           (vc-responsible-backend abs-file-name)
+           'root abs-file-name)))
+        (default-directory root-directory)
+        (file-name (string-remove-prefix root-directory abs-file-name))
+	(line
+	 (with-temp-buffer
+	  (process-file vc-git-program nil t nil "log" "--max-count" "1" relative-hash "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file-name)
+	  (buffer-substring-no-properties (point-min) (point-max))))
+	(line-list (unless (string-prefix-p "fatal" line t) (string-split line "\0")))
+	(hash (nth 0 line-list))
+	(date-relative (nth 1 line-list))
+	(date-full  (nth 2 line-list))
+	(subject (nth 3 line-list))
+	(author (nth 4 line-list))
+	(revision (list hash file-name -1 date-relative date-full subject author)))
+  (if line-list
+   (git-timemachine-show-revision revision)
+   (message "No such commit %s" relative-hash))))
+
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
  (when revision
@@ -352,6 +378,7 @@ updated CURRENT-LINE."
     [("p" "show previous revision" git-timemachine-show-previous-revision)
       ("n" "show next revision" git-timemachine-show-next-revision)
       ("g" "show nth revision" git-timemachine-show-nth-revision)
+      ("h" "show nearest revision" git-timemachine-show-nearest-revision)
       ("t" "show fuzzy revision" git-timemachine-show-revision-fuzzy)]]
   ["Kill current revision"
     [("w" "kill abbreviated revision" git-timemachine-kill-abbreviated-revision)
@@ -370,6 +397,7 @@ updated CURRENT-LINE."
   '(("p" . git-timemachine-show-previous-revision)
      ("n" . git-timemachine-show-next-revision)
      ("g" . git-timemachine-show-nth-revision)
+     ("h" . git-timemachine-show-nearest-revision)
      ("t" . git-timemachine-show-revision-fuzzy)
      ("q" . git-timemachine-quit)
      ("w" . git-timemachine-kill-abbreviated-revision)
