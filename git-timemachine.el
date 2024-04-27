@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 4.16
-;; URL: https://gitlab.com/pidu/git-timemachine
+;; URL: https://codeberg.org/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
 
