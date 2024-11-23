@@ -25,6 +25,7 @@ Use the following keys to navigate historic version of the file
  - `W` Copy the full hash of the current historic version
  - `g` Goto nth revision
  - `t` Goto revision by selected commit message
+ - `i` Show revision introducing text
  - `q` Exit the time machine.
  - `b` Run `magit-blame` on the currently visited revision (if magit available).
  - `c` Show current commit using magit (if magit available).
