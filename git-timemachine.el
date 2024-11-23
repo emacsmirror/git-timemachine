@@ -448,7 +448,8 @@ Call with the value of 'buffer-file-name."
          (cursor-position (git-timemachine--get-cursor-position))
          (new-line nil)
          (mode major-mode)
-         (coding-system buffer-file-coding-system))
+         (coding-system buffer-file-coding-system)
+         (font-lock-mode-enabled (bound-and-true-p font-lock-mode)))
     (with-current-buffer (get-buffer-create timemachine-buffer)
       (switch-to-buffer timemachine-buffer)
       (setq buffer-file-name file-name)
@@ -462,7 +463,15 @@ Call with the value of 'buffer-file-name."
       (goto-char (point-min))
       (forward-line (- new-line 1))
       (git-timemachine--set-cursor-position cursor-position)
-      (git-timemachine-mode))))
+      (git-timemachine-mode)
+      ;; Updates the syntax highlighting in this buffer.
+      (when font-lock-mode-enabled
+        (if (fboundp 'font-lock-update)
+            ;; Emacs >= 25.1
+            (font-lock-update)
+          ;; Emacs < 25.1
+          (with-no-warnings
+            (font-lock-fontify-buffer)))))))
 
 ;;;###autoload
 (defun git-timemachine-toggle ()
