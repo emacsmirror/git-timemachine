@@ -438,40 +438,37 @@ Call with the value of 'buffer-file-name."
     (error "This file is not git tracked")))
 
 (defun git-timemachine--start (get-revision-fn)
-  "Setup a timemachine buffer and populate it from the result of GET-REVISION-FN."
-  (setq git-timemachine--revisions-cache nil)
-  (git-timemachine-validate (buffer-file-name))
-  (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
-         (file-name (buffer-file-name))
-         (timemachine-buffer (format "timemachine:%s" (buffer-name)))
-         (cur-line (line-number-at-pos))
-         (cursor-position (git-timemachine--get-cursor-position))
-         (new-line nil)
-         (mode major-mode)
-         (coding-system buffer-file-coding-system)
-         (font-lock-mode-enabled (bound-and-true-p font-lock-mode)))
-    (with-current-buffer (get-buffer-create timemachine-buffer)
-      (switch-to-buffer timemachine-buffer)
-      (setq buffer-file-name file-name)
-      (setq buffer-file-coding-system coding-system)
-      (delay-mode-hooks (funcall mode))
-      (setq git-timemachine-directory git-directory
-        git-timemachine-file (file-relative-name file-name git-directory)
-        git-timemachine-revision nil)
-      (funcall get-revision-fn)
-      (setq new-line (git-timemachine--find-new-current-line git-timemachine-revision (list "HEAD" "" 0 "" "" "" "") cur-line)) ;; Allow to stay on the same line
-      (goto-char (point-min))
-      (forward-line (- new-line 1))
-      (git-timemachine--set-cursor-position cursor-position)
-      (git-timemachine-mode)
-      ;; Updates the syntax highlighting in this buffer.
-      (when font-lock-mode-enabled
-        (if (fboundp 'font-lock-update)
-            ;; Emacs >= 25.1
-            (font-lock-update)
-          ;; Emacs < 25.1
-          (with-no-warnings
-            (font-lock-fontify-buffer)))))))
+ "Setup a timemachine buffer and populate it from the result of GET-REVISION-FN."
+ (setq git-timemachine--revisions-cache nil)
+ (git-timemachine-validate (buffer-file-name))
+ (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
+       (file-name (buffer-file-name))
+       (timemachine-buffer (format "timemachine:%s" (buffer-name)))
+       (cur-line (line-number-at-pos))
+       (cursor-position (git-timemachine--get-cursor-position))
+       (new-line nil)
+       (mode major-mode)
+       (coding-system buffer-file-coding-system)
+       (font-lock-mode-enabled (bound-and-true-p font-lock-mode)))
+  (with-current-buffer (get-buffer-create timemachine-buffer)
+   (switch-to-buffer timemachine-buffer)
+   (setq buffer-file-name file-name)
+   (setq buffer-file-coding-system coding-system)
+   (delay-mode-hooks (funcall mode))
+   (setq git-timemachine-directory git-directory
+    git-timemachine-file (file-relative-name file-name git-directory)
+    git-timemachine-revision nil)
+   (funcall get-revision-fn)
+   (setq new-line (git-timemachine--find-new-current-line git-timemachine-revision (list "HEAD" "" 0 "" "" "" "") cur-line)) ;; Allow to stay on the same line
+   (goto-char (point-min))
+   (forward-line (- new-line 1))
+   (git-timemachine--set-cursor-position cursor-position)
+   (git-timemachine-mode)
+   (when font-lock-mode-enabled
+    (if (fboundp 'font-lock-update)
+     (font-lock-update)
+     (with-no-warnings
+      (font-lock-fontify-buffer)))))))
 
 ;;;###autoload
 (defun git-timemachine-toggle ()
