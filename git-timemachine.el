@@ -1,4 +1,4 @@
-;;; git-timemachine.el --- Walk through git revisions of a file
+;;; git-timemachine.el --- Walk through git revisions of a file  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2014 Peter Stiernström
 
@@ -89,7 +89,7 @@ Available values are:
 (defcustom git-timemachine-global-git-arguments
   '("-c" "log.showSignature=false" "--no-pager")
   "Common arguments for all git commands."
-  :type 'list
+  :type '(repeat string)
   :group 'git-timemachine)
 
 (defcustom git-timemachine-quit-to-invoking-buffer
